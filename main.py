@@ -115,7 +115,7 @@ def testt(data_path='test1.xlsx'):
     lda = LdaModel(corpus, num_topics=3, id2word=dict)  # LDA 模型训练
     plot = pyLDAvis.gensim_models.prepare(lda, corpus, dict)
     pyLDAvis.save_html(plot, './result/{}_all.html'.format(file_name))
-    return
+    # return
 
     positive_df[1] = positive_df[0].apply(
         lambda s: s.split(' '))  # 定义一个分割函数，然后用apply广播
