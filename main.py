@@ -75,7 +75,7 @@ def snow_nlp(data_path):
     print(f'{data_path}用时', time.time() - startt)
 
 
-def testt(data_path='./test1.xlsx'):
+def testt(data_path='test1.xlsx'):
     file_name=data_path[0:-5]
     print(file_name)
     startt = time.time()
@@ -87,21 +87,36 @@ def testt(data_path='./test1.xlsx'):
     comments = data1.iloc[:, 0].apply(
         lambda x: SnowNLP(x).sentiments)  # series,做筛选条件
 
+    stops = pd.read_csv(stop_list, encoding='gbk', header=None,
+                        sep='mz666', engine='python')  # 读取失败？ 导致停用词未去除s
+    stops = [' ', ''] + list(stops[0])
+
     positive_df = data1[comments >= 0.9]
     negative_df = data1[comments < 0.3]  # 后期改0.1
 
-    positive_df.to_excel("./df/pos_df_{}".format(data_path[2:]))
-    negative_df.to_excel("./df/neg_fg_{}".format(data_path[2:]))
+    positive_df.to_excel("./df/pos_df_{}".format(data_path))
+    negative_df.to_excel("./df/neg_fg_{}".format(data_path))
 
     positive_ser = positive_df.iloc[:, 0].apply(mycut)  # series
     negative_ser = negative_df.iloc[:, 0].apply(mycut)
+    ser=data1.iloc[:, 0].apply(mycut)
 
     positive_df = pd.DataFrame(positive_ser)  # df 存分词
     negative_df = pd.DataFrame(negative_ser)
-    stops = pd.read_csv(stop_list, encoding='gbk', header=None,
-                        sep='mz666', engine='python') #读取失败？ 导致停用词未去除s
+    df=pd.DataFrame(ser)
 
-    stops = [' ', ''] + list(stops[0])
+
+    df[1] = df[0].apply(
+        lambda s: s.split(' '))
+    df[2] = df[1].apply(
+        lambda x: [i for i in x if i not in stops])
+    dict = Dictionary(df[2])  # 建立词典
+    corpus = [dict.doc2bow(i) for i in df[2]]  # 建立语料库
+    lda = LdaModel(corpus, num_topics=3, id2word=dict)  # LDA 模型训练
+    plot = pyLDAvis.gensim_models.prepare(lda, corpus, dict)
+    pyLDAvis.save_html(plot, './result/{}_all.html'.format(file_name))
+    return
+
     positive_df[1] = positive_df[0].apply(
         lambda s: s.split(' '))  # 定义一个分割函数，然后用apply广播
     positive_df[2] = positive_df[1].apply(
@@ -121,10 +136,6 @@ def testt(data_path='./test1.xlsx'):
     negative_df[2] = negative_df[1].apply(
         lambda x: [i for i in x if i not in stops])
 
-
-    # print('------------------')
-    # print('去停用词后negative_df')
-    # print(negative_df)
 
 
 
@@ -151,11 +162,14 @@ def testt(data_path='./test1.xlsx'):
     neg_lda = LdaModel(neg_corpus, num_topics=3, id2word=neg_dict)  # LDA 模型训练
     neg_plot = pyLDAvis.gensim_models.prepare(neg_lda, neg_corpus, neg_dict)
     pyLDAvis.save_html(neg_plot, './result/{}_neg.html'.format(file_name))
-    print('#正面主题分析{}'.format(data_path[2:-5]))
+
+
+
+    print('#正面主题分析{}'.format(data_path[0:-5]))
     for i in range(2):
         print('topic', i)
         print(pos_lda.print_topic(i))  # 输出每个主题
-    print('#负面主题分析{}'.format(data_path[2:-5]))
+    print('#负面主题分析{}'.format(data_path[0:-5]))
     for i in range(3):
         print('topic', i)
         print(neg_lda.print_topic(i))  # 输出每个主题
