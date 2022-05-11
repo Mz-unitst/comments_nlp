@@ -4,7 +4,6 @@ from snownlp import SnowNLP
 import jieba
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
-# from gensim import corpora, models
 import time
 import os
 from multiprocessing import Pool, TimeoutError
@@ -77,7 +76,7 @@ def snow_nlp(data_path):
 
 
 def testt(data_path='./test1.xlsx'):
-    file_name=data_path[2:-5]
+    file_name=data_path[0:-5]
     print(file_name)
     startt = time.time()
     df = pd.read_excel(data_path)
@@ -191,7 +190,7 @@ def start_pool():
             if 'xlsx' in data_path and 'test1' not in data_path:
                 data_paths.append(data_path)
         print(data_paths)
-        pool.map(snow_nlp, data_paths)
+        pool.map(testt, data_paths)
         pool.close()
         pool.join()
 
@@ -202,7 +201,7 @@ def fenci():
 
 if __name__ == '__main__':
 
-    # start_pool()
+    start_pool()
     # snow_nlp('./test1.xlsx')
     # testt('中华.xlsx')
     for data_path in os.listdir('./'):
@@ -229,4 +228,4 @@ if __name__ == '__main__':
     # l(stops)
     # print(stops)
     # testt('./中华.xlsx')
-    testt()
+    # testt()
